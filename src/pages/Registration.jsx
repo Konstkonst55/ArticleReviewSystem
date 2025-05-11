@@ -251,7 +251,7 @@ function Registration() {
 
         <div className="header__footer">
           <Link to="/" className="header__register-link">
-            Do you already have an account? Enter
+            Do you already have an account? Authorization
           </Link>
           <button type="submit" className="header__button">
             SING UP
