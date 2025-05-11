@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useFormik } from "formik";
 import { Link } from "react-router-dom";
 
-function Authorization() {
+function Authorization({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -36,6 +36,7 @@ function Authorization() {
     },
     onSubmit: (values) => {
       console.log(values); //тут короче выводится в консоле что нам пришло(логин, пароль) можете убрать, если не нужно
+      onLogin();
     },
   });
 
