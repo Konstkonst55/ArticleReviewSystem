@@ -32,25 +32,25 @@ const ArticleForm = () => {
       await axios.post("/api/articles", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess("Статья успешно отправлена на рецензию!");
+      setSuccess("The article has been successfully submitted for review!");
       setError("");
       setFormData({ title: "", abstract: "", file: null });
     } catch (err) {
-      setError("Ошибка при отправке статьи. Попробуйте снова.");
+      setError("Error submitting the article. Please try again.");
       setSuccess("");
     }
   };
 
   return (
     <div>
-      <h2>Отправить новую статью</h2>
+      <h2>Submit a New Article</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Заголовок:</label>
+          <label>Title:</label>
           <input
             type="text"
             name="title"
@@ -61,7 +61,7 @@ const ArticleForm = () => {
         </div>
 
         <div>
-          <label>Аннотация:</label>
+          <label>Abstract:</label>
           <textarea
             name="abstract"
             value={formData.abstract}
@@ -71,7 +71,7 @@ const ArticleForm = () => {
         </div>
 
         <div>
-          <label>Файл статьи (.pdf или .docx):</label>
+          <label>Article File (.pdf or .docx):</label>
           <input
             type="file"
             name="file"
@@ -81,7 +81,7 @@ const ArticleForm = () => {
           />
         </div>
 
-        <button type="submit">Отправить на рецензию</button>
+        <button type="submit">Submit for Review</button>
       </form>
     </div>
   );

@@ -5,21 +5,21 @@ import axios from "axios";
 const ReviewForm = ({ articleId }) => {
   const [reviewData, setReviewData] = useState({
     comment: "",
-    status: "на доработку",
+    status: "needs revision",
   });
 
   const [article, setArticle] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Получаем данные о статье (если id передан)
+  // Fetch article data if ID is provided
   useEffect(() => {
     const fetchArticle = async () => {
       try {
         const res = await axios.get(`/api/articles/${articleId}`);
         setArticle(res.data);
       } catch (err) {
-        setError("Не удалось загрузить информацию о статье.");
+        setError("Failed to load article information.");
       }
     };
     if (articleId) fetchArticle();
@@ -33,35 +33,35 @@ const ReviewForm = ({ articleId }) => {
     e.preventDefault();
     try {
       await axios.post(`/api/reviews/${articleId}`, reviewData);
-      setSuccess("Рецензия успешно отправлена!");
+      setSuccess("Review successfully submitted!");
       setError("");
     } catch (err) {
-      setError("Ошибка при отправке рецензии.");
+      setError("Error submitting the review.");
       setSuccess("");
     }
   };
 
   return (
     <div>
-      <h2>Создание рецензии</h2>
+      <h2>Create Review</h2>
 
-      {article && <h3>Статья: {article.title}</h3>}
+      {article && <h3>Article: {article.title}</h3>}
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Статус статьи:</label>
+          <label>Article Status:</label>
           <select name="status" value={reviewData.status} onChange={handleChange}>
-            <option value="на доработку">На доработку</option>
-            <option value="принято к публикации">Принято к публикации</option>
-            <option value="отклонено">Отклонено</option>
+            <option value="needs revision">Needs Revision</option>
+            <option value="accepted for publication">Accepted for Publication</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
 
         <div>
-          <label>Комментарий:</label>
+          <label>Comment:</label>
           <textarea
             name="comment"
             rows="6"
@@ -71,7 +71,7 @@ const ReviewForm = ({ articleId }) => {
           ></textarea>
         </div>
 
-        <button type="submit">Отправить рецензию</button>
+        <button type="submit">Submit Review</button>
       </form>
     </div>
   );

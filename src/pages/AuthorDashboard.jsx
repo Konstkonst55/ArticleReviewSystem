@@ -11,20 +11,20 @@ const AuthorDashboard = () => {
     file: null,
   });
 
-  // Получение статей автора
+  // Fetching the author's articles
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get("/api/articles/author/me");
         setArticles(response.data);
       } catch (err) {
-        setError("Не удалось загрузить статьи.");
+        setError("Failed to load articles.");
       }
     };
     fetchArticles();
   }, []);
 
-  // Обработчик изменения полей формы
+  // Handling form field changes
   const handleChange = (e) => {
     if (e.target.name === "file") {
       setFormData({ ...formData, file: e.target.files[0] });
@@ -33,7 +33,7 @@ const AuthorDashboard = () => {
     }
   };
 
-  // Отправка новой статьи
+  // Submitting a new article
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -49,21 +49,21 @@ const AuthorDashboard = () => {
       setArticles([res.data, ...articles]);
       setFormData({ title: "", abstract: "", file: null });
     } catch (err) {
-      setError("Ошибка при отправке статьи.");
+      setError("Error submitting the article.");
     }
   };
 
   return (
     <div>
-      <h2>Личный кабинет автора</h2>
+      <h2>Author Dashboard</h2>
 
       <section>
-        <h3>Отправить новую статью</h3>
+        <h3>Submit a New Article</h3>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
             name="title"
-            placeholder="Заголовок"
+            placeholder="Title"
             value={formData.title}
             onChange={handleChange}
             required
@@ -71,7 +71,7 @@ const AuthorDashboard = () => {
           <br />
           <textarea
             name="abstract"
-            placeholder="Аннотация"
+            placeholder="Abstract"
             value={formData.abstract}
             onChange={handleChange}
             required
@@ -79,23 +79,23 @@ const AuthorDashboard = () => {
           <br />
           <input type="file" name="file" onChange={handleChange} required accept=".pdf,.docx" />
           <br />
-          <button type="submit">Отправить на рецензию</button>
+          <button type="submit">Submit for Review</button>
         </form>
         {error && <p style={{ color: "red" }}>{error}</p>}
       </section>
 
       <section>
-        <h3>Мои статьи</h3>
+        <h3>My Articles</h3>
         {articles.length > 0 ? (
           <ul>
             {articles.map((article) => (
               <li key={article.id}>
-                <strong>{article.title}</strong> - {article.status || "неизвестен"}
+                <strong>{article.title}</strong> - {article.status || "unknown"}
               </li>
             ))}
           </ul>
         ) : (
-          <p>У вас пока нет статей.</p>
+          <p>You currently have no articles.</p>
         )}
       </section>
     </div>

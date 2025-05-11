@@ -7,7 +7,7 @@ const AdminDashboard = () => {
   const [articles, setArticles] = useState([]);
   const [newUser, setNewUser] = useState({ email: "", role: "author" });
 
-  // Загрузка пользователей и статей
+  // Load users and articles
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -16,35 +16,35 @@ const AdminDashboard = () => {
         setUsers(usersRes.data);
         setArticles(articlesRes.data);
       } catch (err) {
-        console.error("Ошибка при загрузке данных");
+        console.error("Error loading data");
       }
     };
     fetchData();
   }, []);
 
-  // Удаление пользователя
+  // Delete user
   const handleDeleteUser = async (id) => {
-    if (!window.confirm("Вы уверены, что хотите удалить этого пользователя?")) return;
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
       await axios.delete(`/api/users/${id}`);
       setUsers(users.filter((user) => user.id !== id));
     } catch (err) {
-      console.error("Ошибка при удалении пользователя");
+      console.error("Error deleting user");
     }
   };
 
-  // Удаление статьи
+  // Delete article
   const handleDeleteArticle = async (id) => {
-    if (!window.confirm("Вы уверены, что хотите удалить эту статью?")) return;
+    if (!window.confirm("Are you sure you want to delete this article?")) return;
     try {
       await axios.delete(`/api/articles/${id}`);
       setArticles(articles.filter((article) => article.id !== id));
     } catch (err) {
-      console.error("Ошибка при удалении статьи");
+      console.error("Error deleting article");
     }
   };
 
-  // Добавление нового пользователя
+  // Add new user
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
@@ -52,16 +52,16 @@ const AdminDashboard = () => {
       setUsers([...users, res.data]);
       setNewUser({ email: "", role: "author" });
     } catch (err) {
-      console.error("Ошибка при добавлении пользователя");
+      console.error("Error adding new user");
     }
   };
 
   return (
     <div>
-      <h2>Панель администратора</h2>
+      <h2>Admin Dashboard</h2>
 
       <section>
-        <h3>Добавить пользователя</h3>
+        <h3>Add New User</h3>
         <form onSubmit={handleAddUser}>
           <input
             type="email"
@@ -78,32 +78,32 @@ const AdminDashboard = () => {
               setNewUser({ ...newUser, role: e.target.value })
             }
           >
-            <option value="author">Автор</option>
-            <option value="reviewer">Рецензент</option>
+            <option value="author">Author</option>
+            <option value="reviewer">Reviewer</option>
           </select>
-          <button type="submit">Создать</button>
+          <button type="submit">Create</button>
         </form>
       </section>
 
       <section>
-        <h3>Пользователи</h3>
+        <h3>Users</h3>
         <ul>
           {users.map((user) => (
             <li key={user.id}>
               {user.email} ({user.role}){" "}
-              <button onClick={() => handleDeleteUser(user.id)}>Удалить</button>
+              <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
             </li>
           ))}
         </ul>
       </section>
 
       <section>
-        <h3>Статьи</h3>
+        <h3>Articles</h3>
         <ul>
           {articles.map((article) => (
             <li key={article.id}>
-              {article.title} — Автор: {article.authorEmail} — Статус: {article.status}{" "}
-              <button onClick={() => handleDeleteArticle(article.id)}>Удалить</button>
+              {article.title} — Author: {article.authorEmail} — Status: {article.status || "unknown"}{" "}
+              <button onClick={() => handleDeleteArticle(article.id)}>Delete</button>
             </li>
           ))}
         </ul>

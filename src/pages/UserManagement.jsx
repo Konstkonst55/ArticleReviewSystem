@@ -12,55 +12,55 @@ const UserManagement = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Загрузка пользователей
+  // Load users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get("/api/users");
         setUsers(res.data);
       } catch (err) {
-        setError("Не удалось загрузить список пользователей.");
+        setError("Failed to load user list.");
       }
     };
     fetchUsers();
   }, []);
 
-  // Обработчики формы
+  // Form handlers
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/users", newUser);
       setUsers([...users, res.data]);
       setNewUser({ email: "", role: "author" });
-      setSuccess("Пользователь добавлен успешно.");
+      setSuccess("User added successfully.");
       setError("");
     } catch (err) {
-      setError("Ошибка при добавлении пользователя.");
+      setError("Error adding user.");
       setSuccess("");
     }
   };
 
   const handleDeleteUser = async (id) => {
-    if (!window.confirm("Вы уверены, что хотите удалить этого пользователя?")) return;
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
       await axios.delete(`/api/users/${id}`);
       setUsers(users.filter((user) => user.id !== id));
-      setSuccess("Пользователь удален.");
+      setSuccess("User deleted.");
     } catch (err) {
-      setError("Ошибка при удалении пользователя.");
+      setError("Error deleting user.");
     }
   };
 
   return (
     <div>
-      <h2>Управление пользователями</h2>
+      <h2>User Management</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
       <section>
-        <h3>Добавить нового пользователя</h3>
+        <h3>Add New User</h3>
         <form onSubmit={handleAddUser}>
           <input
             type="email"
@@ -77,20 +77,20 @@ const UserManagement = () => {
               setNewUser({ ...newUser, role: e.target.value })
             }
           >
-            <option value="author">Автор</option>
-            <option value="reviewer">Рецензент</option>
+            <option value="author">Author</option>
+            <option value="reviewer">Reviewer</option>
           </select>
-          <button type="submit">Добавить</button>
+          <button type="submit">Add</button>
         </form>
       </section>
 
       <section>
-        <h3>Список пользователей</h3>
+        <h3>User List</h3>
         <ul>
           {users.map((user) => (
             <li key={user.id}>
-              {user.email} — роль: {user.role}
-              <button onClick={() => handleDeleteUser(user.id)}>Удалить</button>
+              {user.email} — Role: {user.role}
+              <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
             </li>
           ))}
         </ul>
