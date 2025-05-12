@@ -34,9 +34,11 @@ function Authorization({ onLogin }) {
 
       return errors;
     },
+
     onSubmit: (values) => {
-      console.log(values); //тут короче выводится в консоле что нам пришло(логин, пароль) можете убрать, если не нужно
-      onLogin();
+      console.log(values);
+      const role = values.email.includes("admin") ? "admin" : "author";
+      onLogin(role);
     },
   });
 

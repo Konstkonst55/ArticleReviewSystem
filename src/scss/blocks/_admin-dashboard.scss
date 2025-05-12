@@ -308,17 +308,17 @@
 
     &--published {
       background-color: #e8f5e9;
-      color: #4caf50;
+      color: var(--color-published);
     }
 
     &--under-review {
       background-color: #fff8e1;
-      color: #ffa000;
+      color: var(--color-review);
     }
 
     &--draft {
       background-color: #e0e0e0;
-      color: #616161;
+      color: var(--color-draft);
     }
   }
 

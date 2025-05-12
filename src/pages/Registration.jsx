@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Registration() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -57,6 +58,7 @@ function Registration() {
     },
     onSubmit: (values) => {
       console.log(values);
+      navigate("/");
     },
   });
 
