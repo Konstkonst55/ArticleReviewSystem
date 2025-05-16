@@ -5,10 +5,13 @@ import Authorization from "./pages/Authorization";
 import Registration from "./pages/Registration";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthorDashboard from "./pages/AuthorDashboard";
-import AuthorProfile from "./components/AuthorProfile";
-import AuthorMyArticles from "./components/AuthorMyArticles";
-import AuthorSubmitArticle from "./components/AuthorSubmitArticle";
-import AuthorReviewArticles from "./components/AuthorReviewArticles";
+import AuthorProfile from "./components/Author/AuthorProfile";
+import AuthorSubmitArticle from "./components/Author/AuthorSubmitArticle";
+import AuthorReviewArticles from "./components/Author/AuthorReviewArticles";
+import ReviewerDashboard from "./pages/ReviewerDashboard";
+import ReviewerProfile from "./components/Reviewer/ReviewerProfile";
+import InProgressReviews from "./components/Reviewer/InProgressReviews";
+import CompletedReviews from "./components/Reviewer/CompletedReviews";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -27,8 +30,10 @@ function App() {
 
     if (role === "admin") {
       navigate("/admin-dashboard");
-    } else {
+    } else if (role === "author") {
       navigate("/author-dashboard");
+    } else if (role === "reviewer") {
+      navigate("/reviewer-dashboard");
     }
   };
 
@@ -75,9 +80,24 @@ function App() {
         }
       >
         <Route path="profile" element={<AuthorProfile />} />
-        <Route path="my-articles" element={<AuthorMyArticles />} />
         <Route path="submit-article" element={<AuthorSubmitArticle />} />
         <Route path="review-articles" element={<AuthorReviewArticles />} />
+        <Route index element={<Navigate to="profile" replace />} />
+      </Route>
+
+      <Route
+        path="/reviewer-dashboard"
+        element={
+          isAuthenticated && userRole === "reviewer" ? (
+            <ReviewerDashboard onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      >
+        <Route path="profile" element={<ReviewerProfile />} />
+        <Route path="in-progress" element={<InProgressReviews />} />
+        <Route path="completed" element={<CompletedReviews />} />
         <Route index element={<Navigate to="profile" replace />} />
       </Route>
 

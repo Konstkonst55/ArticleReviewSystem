@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 function AuthorDashboard({ onLogout }) {
+  const [submittedArticles, setSubmittedArticles] = useState([]);
+  const handleArticleSubmit = (article) => {
+    setSubmittedArticles((prev) => [...prev, article]);
+  };
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(
     location.pathname.split("/").pop() || "profile"
@@ -43,13 +47,6 @@ function AuthorDashboard({ onLogout }) {
           Profile
         </Link>
         <Link
-          to="my-articles"
-          className={`nav-link ${activeTab === "my-articles" ? "active" : ""}`}
-          onClick={() => setActiveTab("my-articles")}
-        >
-          My Articles
-        </Link>
-        <Link
           to="submit-article"
           className={`nav-link ${
             activeTab === "submit-article" ? "active" : ""
@@ -79,6 +76,7 @@ function AuthorDashboard({ onLogout }) {
             setTelegramHandle,
             handleSave,
             onLogout,
+            onSubmitReview: handleArticleSubmit,
           }}
         />
       </div>

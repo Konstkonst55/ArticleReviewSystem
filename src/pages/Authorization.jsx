@@ -37,7 +37,14 @@ function Authorization({ onLogin }) {
 
     onSubmit: (values) => {
       console.log(values);
-      const role = values.email.includes("admin") ? "admin" : "author";
+      let role;
+      if (values.email.includes("admin")) {
+        role = "admin";
+      } else if (values.email.includes("reviewer")) {
+        role = "reviewer";
+      } else {
+        role = "author";
+      }
       onLogin(role);
     },
   });
