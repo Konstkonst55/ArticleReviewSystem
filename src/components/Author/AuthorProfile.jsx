@@ -116,7 +116,8 @@ function AuthorProfile() {
                 name="email"
                 value={editableData.email}
                 onChange={handleInputChange}
-                disabled={!editableData.isEditing}
+                // disabled={!editableData.isEditing}
+                disabled
               />
             ) : (
               <div className="info-value">

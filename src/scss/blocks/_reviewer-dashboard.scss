@@ -362,20 +362,11 @@
         color: #666;
       }
     }
-
-    .request-meta {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      color: #666;
-      font-size: 14px;
-    }
   }
 
   .view-review-btn,
   .continue-btn,
   .accept-btn,
-  .request-extension-btn,
   .decline-btn {
     padding: 8px 16px;
     border: none;
@@ -401,11 +392,6 @@
 
   .decline-btn {
     background-color: #f44336;
-    color: var(--color-white);
-  }
-
-  .request-extension-btn {
-    background-color: #ff9800;
     color: var(--color-white);
   }
 

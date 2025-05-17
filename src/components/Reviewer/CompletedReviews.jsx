@@ -1,35 +1,36 @@
 import React from "react";
-import { useOutletContext } from "react-router-dom";
 
 function CompletedReviews() {
-  const { reviewerInfo } = useOutletContext();
+  // const completedReviews = [
+  //   {
+  //     id: 1,
+  //     title: "Artificial Intelligence in Education",
+  //     authors: "David Wilson, Emma Brown",
+  //     completedDate: "Apr 20, 2025",
+  //     score: 4,
+  //     decision: "Accept with Minor Revisions",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Blockchain Technologies in Supply Chain",
+  //     authors: "Robert Chang, Lisa Martinez",
+  //     completedDate: "Mar 15, 2025",
+  //     score: 3,
+  //     decision: "Major Revisions Required",
+  //   },
+  //   {
+  //     id: 3,
+  //     title: "Neural Networks in Image Processing",
+  //     authors: "James Anderson, Maria Garcia",
+  //     completedDate: "Feb 28, 2025",
+  //     score: 5,
+  //     decision: "Accept as is",
+  //   },
+  // ];
 
-  const completedReviews = [
-    {
-      id: 1,
-      title: "Artificial Intelligence in Education",
-      authors: "David Wilson, Emma Brown",
-      completedDate: "Apr 20, 2025",
-      score: 4,
-      decision: "Accept with Minor Revisions",
-    },
-    {
-      id: 2,
-      title: "Blockchain Technologies in Supply Chain",
-      authors: "Robert Chang, Lisa Martinez",
-      completedDate: "Mar 15, 2025",
-      score: 3,
-      decision: "Major Revisions Required",
-    },
-    {
-      id: 3,
-      title: "Neural Networks in Image Processing",
-      authors: "James Anderson, Maria Garcia",
-      completedDate: "Feb 28, 2025",
-      score: 5,
-      decision: "Accept as is",
-    },
-  ];
+  const [completedReviews, setCompletedReviews] = React.useState(
+    JSON.parse(localStorage.getItem("completedReviews")) || []
+  );
 
   const renderStars = (score) => {
     return "★".repeat(score) + "☆".repeat(5 - score);

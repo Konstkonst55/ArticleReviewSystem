@@ -12,6 +12,7 @@ import ReviewerDashboard from "./pages/ReviewerDashboard";
 import ReviewerProfile from "./components/Reviewer/ReviewerProfile";
 import InProgressReviews from "./components/Reviewer/InProgressReviews";
 import CompletedReviews from "./components/Reviewer/CompletedReviews";
+import ReviewSubmission from "./components/Reviewer/Submition/ReviewSubmission";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -100,6 +101,16 @@ function App() {
         <Route path="completed" element={<CompletedReviews />} />
         <Route index element={<Navigate to="profile" replace />} />
       </Route>
+      <Route
+        path="/review-submission"
+        element={
+          isAuthenticated && userRole === "reviewer" ? (
+            <ReviewSubmission />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

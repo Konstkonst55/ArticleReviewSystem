@@ -2,10 +2,33 @@ import React, { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 function AuthorDashboard({ onLogout }) {
-  const [submittedArticles, setSubmittedArticles] = useState([]);
-  const handleArticleSubmit = (article) => {
-    setSubmittedArticles((prev) => [...prev, article]);
-  };
+  const [articles, setArticles] = useState([
+    {
+      id: 1,
+      title: "Machine Learning Advances in 2025",
+      author: "Sarah Johnson",
+      date: "May 4, 2025",
+      category: "Technology",
+      status: "Under Review",
+    },
+    {
+      id: 2,
+      title: "Blockchain in Healthcare",
+      author: "Michael Chen",
+      date: "May 3, 2025",
+      category: "Healthcare",
+      status: "Under Review",
+    },
+    {
+      id: 3,
+      title: "Sustainable Energy Solutions",
+      author: "Emma Watson",
+      date: "May 2, 2025",
+      category: "Environment",
+      status: "Published",
+    },
+  ]);
+
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(
     location.pathname.split("/").pop() || "profile"
@@ -25,10 +48,26 @@ function AuthorDashboard({ onLogout }) {
   });
 
   const handleSave = (updatedData) => {
-    console.log("Saved:", updatedData);
     setAuthorInfo(updatedData);
   };
 
+  const handleArticleSubmit = (updatedArticles) => {
+    if (Array.isArray(updatedArticles)) {
+      setArticles(updatedArticles);
+    } else {
+      setArticles((prevArticles) => {
+        const existingIndex = prevArticles.findIndex(
+          (a) => a.id === updatedArticles.id
+        );
+        if (existingIndex >= 0) {
+          const updated = [...prevArticles];
+          updated[existingIndex] = updatedArticles;
+          return updated;
+        }
+        return [...prevArticles, updatedArticles];
+      });
+    }
+  };
   return (
     <div className="author-dashboard">
       <div className="author-header">
@@ -76,6 +115,7 @@ function AuthorDashboard({ onLogout }) {
             setTelegramHandle,
             handleSave,
             onLogout,
+            articles,
             onSubmitReview: handleArticleSubmit,
           }}
         />

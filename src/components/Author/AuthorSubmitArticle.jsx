@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useOutletContext, useLocation } from "react-router-dom";
 
 function AuthorSubmitArticle() {
-  const { onSubmitReview } = useOutletContext();
+  const { authorInfo, onSubmitReview } = useOutletContext();
   const location = useLocation();
   const [article, setArticle] = useState(
     location.state?.draftToEdit || {
@@ -18,12 +18,6 @@ function AuthorSubmitArticle() {
   const [validationErrors, setValidationErrors] = useState({});
   const contentEditableRef = useRef(null);
 
-  useEffect(() => {
-    if (contentEditableRef.current) {
-      contentEditableRef.current.textContent = article.content;
-    }
-  }, []);
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setArticle((prev) => ({
@@ -35,10 +29,27 @@ function AuthorSubmitArticle() {
     }
   };
 
+  useEffect(() => {
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = article.content || "";
+
+      if (contentEditableRef.current.innerHTML) {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(contentEditableRef.current);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        contentEditableRef.current.focus();
+      }
+    }
+  }, [article.content, location.state?.draftToEdit]);
+
   const handleContentChange = () => {
     if (contentEditableRef.current) {
       const content = contentEditableRef.current.innerHTML;
       setArticle((prev) => ({ ...prev, content }));
+
       if (validationErrors.content) {
         setValidationErrors((prev) => ({ ...prev, content: null }));
       }
@@ -48,6 +59,7 @@ function AuthorSubmitArticle() {
   const toggleFormat = (format) => {
     document.execCommand(format, false, null);
     contentEditableRef.current.focus();
+    handleContentChange();
   };
 
   const handleDrag = (e) => {
@@ -104,7 +116,7 @@ function AuthorSubmitArticle() {
 
     const newArticle = {
       ...article,
-      id: Date.now(),
+      id: location.state?.draftToEdit?.id || Date.now(),
       status: isFormValid && hasFile ? "Under Review" : "Draft",
       date: new Date().toLocaleDateString("en-US", {
         year: "numeric",
@@ -112,7 +124,7 @@ function AuthorSubmitArticle() {
         day: "numeric",
       }),
       file: file ? file.name : null,
-      author: "John Doe",
+      author: `${authorInfo.firstName} ${authorInfo.lastName}`,
     };
 
     onSubmitReview(newArticle);
@@ -132,7 +144,7 @@ function AuthorSubmitArticle() {
 
     const newArticle = {
       ...article,
-      id: Date.now(),
+      id: location.state?.draftToEdit?.id || Date.now(),
       status: "Draft",
       date: new Date().toLocaleDateString("en-US", {
         year: "numeric",
@@ -140,10 +152,12 @@ function AuthorSubmitArticle() {
         day: "numeric",
       }),
       file: file ? file.name : null,
+      author: `${authorInfo.firstName} ${authorInfo.lastName}`,
     };
 
     onSubmitReview(newArticle);
     resetForm();
+    alert("Draft saved successfully!");
   };
 
   const resetForm = () => {

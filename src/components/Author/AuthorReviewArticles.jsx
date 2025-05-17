@@ -2,55 +2,19 @@ import React, { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 
 function AuthorReviewArticles() {
-  const { authorInfo, onSubmitReview } = useOutletContext();
+  const { articles, onSubmitReview } = useOutletContext();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [articles, setArticles] = useState([
-    {
-      id: 1,
-      title: "Machine Learning Advances in 2025",
-      author: "Sarah Johnson",
-      date: "May 4, 2025",
-      category: "Technology",
-      status: "Under Review",
-    },
-    {
-      id: 2,
-      title: "Blockchain in Healthcare",
-      author: "Michael Chen",
-      date: "May 3, 2025",
-      category: "Healthcare",
-      status: "Under Review",
-    },
-    {
-      id: 3,
-      title: "Sustainable Energy Solutions",
-      author: "Emma Watson",
-      date: "May 2, 2025",
-      category: "Environment",
-      status: "Published",
-    },
-    {
-      id: 4,
-      title: "Draft Article Example",
-      author: `${authorInfo.firstName} ${authorInfo.lastName}`,
-      date: "May 1, 2025",
-      category: "Business",
-      status: "Draft",
-    },
-  ]);
 
   const filteredArticles = articles.filter((article) => {
     const matchesStatus =
       statusFilter === "all" || article.status === statusFilter;
     const matchesSearch =
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (article.author &&
-        article.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      article.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.status.toLowerCase().includes(searchTerm.toLowerCase());
+      article.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.status?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesStatus && matchesSearch;
   });
@@ -63,8 +27,13 @@ function AuthorReviewArticles() {
 
   const handleDeleteArticle = (id) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
-      setArticles(articles.filter((article) => article.id !== id));
+      const updatedArticles = articles.filter((article) => article.id !== id);
+      onSubmitReview(updatedArticles);
     }
+  };
+
+  const handleCreateNewDraft = () => {
+    navigate("/author-dashboard/submit-article");
   };
 
   return (
@@ -123,7 +92,7 @@ function AuthorReviewArticles() {
             {statusFilter === "Draft" && (
               <button
                 className="create-draft-btn"
-                onClick={() => navigate("/author-dashboard/submit-article")}
+                onClick={handleCreateNewDraft}
               >
                 Create New Draft
               </button>

@@ -1,10 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
 function ReviewerProfile() {
   const { reviewerInfo, handleSave, onLogout } = useOutletContext();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(reviewerInfo);
+  const [reviewStats, setReviewStats] = useState({
+    total: 0,
+    inProgress: 0,
+    completed: 0,
+  });
+
+  useEffect(() => {
+    const inProgressReviews = JSON.parse(
+      localStorage.getItem("inProgressReviews") || "[]"
+    ).filter((review) => review.reviewerId === reviewerInfo.id);
+
+    const completedReviews = JSON.parse(
+      localStorage.getItem("completedReviews") || "[]"
+    ).filter((review) => review.reviewerId === reviewerInfo.id);
+
+    setReviewStats({
+      inProgress: inProgressReviews.length,
+      completed: completedReviews.length,
+      total: inProgressReviews.length + completedReviews.length,
+    });
+  }, [reviewerInfo.id]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -16,6 +37,16 @@ function ReviewerProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const reviewers = JSON.parse(localStorage.getItem("reviewers") || "[]");
+    const updatedReviewers = reviewers.map((reviewer) =>
+      reviewer.id === reviewerInfo.id
+        ? { ...reviewer, availableForReviews: formData.availableForReviews }
+        : reviewer
+    );
+
+    localStorage.setItem("reviewers", JSON.stringify(updatedReviewers));
+
     handleSave(formData);
     setIsEditing(false);
   };
@@ -147,15 +178,15 @@ function ReviewerProfile() {
               <h3>Review Statistics</h3>
               <div className="stats-grid">
                 <div className="stat-item">
-                  <div className="stat-number">12</div>
+                  <div className="stat-number">{reviewStats.total}</div>
                   <div className="stat-label">Total Reviews</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">3</div>
+                  <div className="stat-number">{reviewStats.inProgress}</div>
                   <div className="stat-label">In Progress</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">9</div>
+                  <div className="stat-number">{reviewStats.completed}</div>
                   <div className="stat-label">Completed</div>
                 </div>
               </div>

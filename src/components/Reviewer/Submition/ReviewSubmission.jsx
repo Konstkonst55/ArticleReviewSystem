@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ReviewSubmission = () => {
+  const location = useLocation();
+  const articleData = location.state?.articleData || {
+    title: "Machine Learning Applications in Healthcare",
+    authors: "Sarah Johnson, Michael Chen",
+  };
   const [formData, setFormData] = useState({
     overallRating: 0,
     recommendation: "",
@@ -10,14 +16,17 @@ const ReviewSubmission = () => {
     commentsToAuthors: "",
     confidentialComments: "",
     attachments: [],
+    title: articleData.title,
+    authors: articleData.authors,
   });
 
   const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const navigate = useNavigate();
 
-  // Рассчитываем прогресс заполнения формы
   useEffect(() => {
     let filledFields = 0;
-    const totalFields = 7; // Общее количество полей для заполнения
+    const totalFields = 7;
 
     if (formData.overallRating > 0) filledFields++;
     if (formData.recommendation) filledFields++;
@@ -29,6 +38,7 @@ const ReviewSubmission = () => {
 
     const newProgress = Math.round((filledFields / totalFields) * 100);
     setProgress(newProgress);
+    setIsComplete(newProgress === 100);
   }, [formData]);
 
   const handleInputChange = (e) => {
@@ -48,15 +58,97 @@ const ReviewSubmission = () => {
     }));
   };
 
+  const handleRemoveFile = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Отправка данных рецензии
-    console.log("Review submitted:", formData);
+
+    if (!isComplete) {
+      alert("Please fill in all required fields before submitting the review.");
+      return;
+    }
+
+    const completedReviews = JSON.parse(
+      localStorage.getItem("completedReviews") || "[]"
+    );
+
+    const newReview = {
+      id: Date.now(),
+      title: formData.title,
+      authors: formData.authors,
+      completedDate: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+      score: formData.overallRating,
+      decision: formData.recommendation,
+    };
+
+    localStorage.setItem(
+      "completedReviews",
+      JSON.stringify([...completedReviews, newReview])
+    );
+
+    const inProgressReviews = JSON.parse(
+      localStorage.getItem("inProgressReviews") || "[]"
+    );
+    const updatedInProgress = inProgressReviews.filter(
+      (r) => r.title !== formData.title
+    );
+    localStorage.setItem(
+      "inProgressReviews",
+      JSON.stringify(updatedInProgress)
+    );
+
+    navigate("/reviewer-dashboard/completed");
   };
 
   const handleSaveDraft = () => {
-    // Сохранение черновика
-    console.log("Draft saved:", formData);
+    if (isComplete) {
+      alert("All fields are complete. Please use 'Submit Review' instead.");
+      return;
+    }
+
+    const inProgressReviews = JSON.parse(
+      localStorage.getItem("inProgressReviews") || "[]"
+    );
+
+    const existingIndex = inProgressReviews.findIndex(
+      (r) => r.title === formData.title
+    );
+
+    if (existingIndex >= 0) {
+      inProgressReviews[existingIndex] = {
+        ...inProgressReviews[existingIndex],
+        progress: progress,
+      };
+    } else {
+      inProgressReviews.push({
+        id: Date.now(),
+        title: formData.title,
+        authors: formData.authors,
+        progress: progress,
+        dueDate: new Date(
+          Date.now() + 14 * 24 * 60 * 60 * 1000
+        ).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+      });
+    }
+
+    localStorage.setItem(
+      "inProgressReviews",
+      JSON.stringify(inProgressReviews)
+    );
+    navigate("/reviewer-dashboard/in-progress");
   };
 
   return (
@@ -79,7 +171,8 @@ const ReviewSubmission = () => {
         <form onSubmit={handleSubmit}>
           <div className="review-section">
             <h2>Review Submission</h2>
-            <h3>Machine Learning Applications in Healthcare</h3>
+            <h3>{formData.title || "Review"}</h3>
+            <p className="authors">Authors: {formData.authors}</p>
           </div>
 
           <div className="review-section">
@@ -109,12 +202,12 @@ const ReviewSubmission = () => {
                 onChange={handleInputChange}
               >
                 <option value="">Select recommendation</option>
-                <option value="Accept">Accept</option>
+                <option value="Accept">Accept as is</option>
                 <option value="Accept with minor revisions">
                   Accept with minor revisions
                 </option>
                 <option value="Accept with major revisions">
-                  Accept with major revisions
+                  Major Revission Required
                 </option>
                 <option value="Reject">Reject</option>
               </select>
@@ -188,17 +281,40 @@ const ReviewSubmission = () => {
                 onChange={handleFileUpload}
                 multiple
                 style={{ display: "none" }}
+                accept=".pdf,.docx"
               />
-              <label htmlFor="file-upload" className="upload-area">
-                <p>Drag and drop files here or click to upload</p>
-              </label>
-              <div className="file-list">
-                {formData.attachments.map((file, index) => (
-                  <div key={index} className="file-item">
-                    {file.name}
+              <label
+                htmlFor="file-upload"
+                className={`upload-area ${
+                  formData.attachments.length > 0 ? "has-files" : ""
+                }`}
+              >
+                <div className="upload-content">
+                  <p>Drag and drop file here or</p>
+                  <button className="browse-text">Browse files</button>
+                  <p className="file-formats">
+                    Supported formats: PDF, DOCX (required for review)
+                  </p>
+                </div>
+
+                {formData.attachments.length > 0 && (
+                  <div className="file-list">
+                    {formData.attachments.map((file, index) => (
+                      <div key={index} className="file-item">
+                        <span>{file.name}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFile(index);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </label>
             </div>
           </div>
 
@@ -207,10 +323,15 @@ const ReviewSubmission = () => {
               type="button"
               onClick={handleSaveDraft}
               className="save-draft"
+              disabled={isComplete}
             >
               Save Draft
             </button>
-            <button type="submit" className="submit-review">
+            <button
+              type="submit"
+              className="submit-review"
+              disabled={!isComplete}
+            >
               Submit Review
             </button>
           </div>
