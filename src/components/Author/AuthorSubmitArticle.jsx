@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useOutletContext, useLocation } from "react-router-dom";
+import { submitArticle } from '../../api';
 
 function AuthorSubmitArticle() {
-  const { authorInfo, onSubmitReview } = useOutletContext();
+
+  const { authorInfo } = useOutletContext();
   const location = useLocation();
   const [article, setArticle] = useState(
     location.state?.draftToEdit || {
@@ -17,6 +19,7 @@ function AuthorSubmitArticle() {
   const [dragActive, setDragActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const contentEditableRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -24,6 +27,7 @@ function AuthorSubmitArticle() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -31,7 +35,9 @@ function AuthorSubmitArticle() {
 
   useEffect(() => {
     if (contentEditableRef.current) {
+
       contentEditableRef.current.innerHTML = article.content || "";
+
 
       if (contentEditableRef.current.innerHTML) {
         const range = document.createRange();
@@ -40,10 +46,12 @@ function AuthorSubmitArticle() {
         range.collapse(false);
         selection.removeAllRanges();
         selection.addRange(range);
-        contentEditableRef.current.focus();
+
+
       }
     }
   }, [article.content, location.state?.draftToEdit]);
+
 
   const handleContentChange = () => {
     if (contentEditableRef.current) {
@@ -59,8 +67,9 @@ function AuthorSubmitArticle() {
   const toggleFormat = (format) => {
     document.execCommand(format, false, null);
     contentEditableRef.current.focus();
-    handleContentChange();
+
   };
+
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -90,9 +99,14 @@ function AuthorSubmitArticle() {
       ];
       if (validTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
+
+
       } else {
         alert("Please upload a file in PDF or DOCX format");
+        setFile(null);
       }
+    } else {
+      setFile(null);
     }
   };
 
@@ -100,7 +114,11 @@ function AuthorSubmitArticle() {
     const errors = {};
     if (!article.title.trim()) errors.title = "Title is required";
     if (!article.category) errors.category = "Please select a category";
-    if (!article.content.trim()) errors.content = "Content is required";
+
+    if (!contentEditableRef.current || contentEditableRef.current.innerText.trim() === "") {
+      errors.content = "Content is required";
+    }
+
     if (!article.isOriginal)
       errors.isOriginal = "Originality confirmation is required";
 
@@ -108,57 +126,73 @@ function AuthorSubmitArticle() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
 
     const isFormValid = validateForm();
     const hasFile = !!file;
 
-    const newArticle = {
-      ...article,
-      id: location.state?.draftToEdit?.id || Date.now(),
-      status: isFormValid && hasFile ? "Under Review" : "Draft",
-      date: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      file: file ? file.name : null,
-      author: `${authorInfo.firstName} ${authorInfo.lastName}`,
-    };
-
-    onSubmitReview(newArticle);
-    resetForm();
-
     if (!isFormValid || !hasFile) {
       alert(
-        "Not all required fields are filled or file is missing. Article saved as Draft."
+        "Not all required fields are filled or file is missing. Please complete the form to submit for review."
       );
-    } else {
+
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+    formData.append('Title', article.title);
+    formData.append('Category', article.category);
+    formData.append('Content', article.content);
+    formData.append('Tags', article.tags);
+    formData.append('IsOriginal', article.isOriginal);
+    if (file) {
+      formData.append('File', file);
+    }
+
+    try {
+      const response = await submitArticle(formData);
+
+      console.log('Article submitted successfully:', response.data);
+
       alert("Article submitted for review successfully!");
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting article:', error);
+
+
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(`Error submitting article: ${error.response.data.message}`);
+      } else {
+        alert("An error occurred while submitting the article.");
+      }
+
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSaveDraft = (e) => {
     e.preventDefault();
-
-    const newArticle = {
+    const draftArticle = {
       ...article,
-      id: location.state?.draftToEdit?.id || Date.now(),
+
+      file: file ? { name: file.name, type: file.type } : null,
       status: "Draft",
       date: new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
       }),
-      file: file ? file.name : null,
       author: `${authorInfo.firstName} ${authorInfo.lastName}`,
     };
 
-    onSubmitReview(newArticle);
-    resetForm();
-    alert("Draft saved successfully!");
+    console.log("Draft data:", draftArticle);
+    alert("Draft saved locally (not to server yet).");
   };
+
 
   const resetForm = () => {
     setArticle({
@@ -180,7 +214,7 @@ function AuthorSubmitArticle() {
       <h2>Submit Article for Review</h2>
       <p>Please fill in all fields below to submit your article for review.</p>
 
-      <form>
+      <form onSubmit={handleSubmitReview}> { }
         <div className="form-section">
           <h2>Article Title</h2>
           <input
@@ -249,9 +283,8 @@ function AuthorSubmitArticle() {
           </div>
           <div
             ref={contentEditableRef}
-            className={`content-editable ${
-              validationErrors.content ? "error" : ""
-            }`}
+            className={`content-editable ${validationErrors.content ? "error" : ""
+              }`}
             contentEditable
             onInput={handleContentChange}
             placeholder="Write your article content here..."
@@ -284,7 +317,7 @@ function AuthorSubmitArticle() {
                     <span>{file.name}</span>
                     <button
                       type="button"
-                      onClick={() => setFile(null)}
+                      onClick={(e) => { e.stopPropagation(); setFile(null); }}
                       className="remove-file"
                     >
                       ×
@@ -295,9 +328,10 @@ function AuthorSubmitArticle() {
                     <span>Drag and drop file here or</span>
                     <button
                       type="button"
-                      onClick={() =>
-                        document.getElementById("file-upload").click()
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        document.getElementById("file-upload").click();
+                      }}
                       className="browse-btn"
                     >
                       Browse files
@@ -309,6 +343,10 @@ function AuthorSubmitArticle() {
                 )}
               </div>
             </label>
+            { }
+            {!file && validationErrors.file && (
+              <span className="error-message">{validationErrors.file}</span>
+            )}
           </div>
         </div>
 
@@ -342,15 +380,18 @@ function AuthorSubmitArticle() {
         </div>
 
         <div className="form-actions">
+          { }
           <button type="button" className="draft-btn" onClick={handleSaveDraft}>
             Save as Draft
           </button>
+          { }
           <button
-            type="button"
+            type="submit"
             className="submit-btn"
-            onClick={handleSubmitReview}
+
+            disabled={isSubmitting}
           >
-            Submit for Review
+            {isSubmitting ? 'Submitting...' : 'Submit for Review'}
           </button>
         </div>
       </form>

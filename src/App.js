@@ -29,11 +29,11 @@ function App() {
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("userRole", role);
 
-    if (role === "admin") {
+    if (role === "Administrator") {
       navigate("/admin-dashboard");
-    } else if (role === "author") {
+    } else if (role === "Author") {
       navigate("/author-dashboard");
-    } else if (role === "reviewer") {
+    } else if (role === "Reviewer") {
       navigate("/reviewer-dashboard");
     }
   };
@@ -43,6 +43,8 @@ function App() {
     setUserRole("");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authExpires");
     navigate("/");
   };
 
@@ -62,7 +64,7 @@ function App() {
       <Route
         path="/admin-dashboard"
         element={
-          isAuthenticated && userRole === "admin" ? (
+          isAuthenticated && userRole === "Administrator" ? (
             <AdminDashboard onLogout={handleLogout} />
           ) : (
             <Navigate to="/" replace />
@@ -73,7 +75,7 @@ function App() {
       <Route
         path="/author-dashboard"
         element={
-          isAuthenticated && userRole === "author" ? (
+          isAuthenticated && userRole === "Author" ? (
             <AuthorDashboard onLogout={handleLogout} />
           ) : (
             <Navigate to="/" replace />
@@ -89,7 +91,7 @@ function App() {
       <Route
         path="/reviewer-dashboard"
         element={
-          isAuthenticated && userRole === "reviewer" ? (
+          isAuthenticated && userRole === "Reviewer" ? (
             <ReviewerDashboard onLogout={handleLogout} />
           ) : (
             <Navigate to="/" replace />
@@ -104,7 +106,7 @@ function App() {
       <Route
         path="/review-submission"
         element={
-          isAuthenticated && userRole === "reviewer" ? (
+          isAuthenticated && userRole === "Reviewer" ? (
             <ReviewSubmission />
           ) : (
             <Navigate to="/" replace />

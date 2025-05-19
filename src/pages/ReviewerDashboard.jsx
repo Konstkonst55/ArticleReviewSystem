@@ -1,24 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import {
+  getReviewerProfile,
+  updateReviewerProfile,
+  getInProgressAssignments,
+  getCompletedReviews,
+  respondToAssignment,
+  createReview,
+} from "../api";
 
 function ReviewerDashboard({ onLogout }) {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(
     location.pathname.split("/").pop() || "profile"
   );
+  const [reviewerInfo, setReviewerInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [reviewerInfo, setReviewerInfo] = useState({
-    fullName: "John Smith",
-    email: "john.smith@university.edu",
-    institution: "University of Science",
-    fieldOfExpertise: "Computer Science",
-    availableForReviews: true,
-    maxConcurrentReviews: 3,
-  });
+  useEffect(() => {
+    setLoading(true);
+    getReviewerProfile()
+      .then(({ data }) => {
+        setReviewerInfo(data);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load profile.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSave = (updatedData) => {
-    setReviewerInfo(updatedData);
+    updateReviewerProfile(updatedData)
+      .then(({ data }) => {
+        setReviewerInfo(data);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to update profile.");
+      });
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
 
   return (
     <div className="reviewer-dashboard">
@@ -28,27 +58,21 @@ function ReviewerDashboard({ onLogout }) {
       </div>
 
       <nav className="reviewer-nav">
-        <Link
-          to="profile"
-          className={`nav-link ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => setActiveTab("profile")}
-        >
-          Profile
-        </Link>
-        <Link
-          to="in-progress"
-          className={`nav-link ${activeTab === "in-progress" ? "active" : ""}`}
-          onClick={() => setActiveTab("in-progress")}
-        >
-          In Progress Reviews
-        </Link>
-        <Link
-          to="completed"
-          className={`nav-link ${activeTab === "completed" ? "active" : ""}`}
-          onClick={() => setActiveTab("completed")}
-        >
-          Completed Reviews
-        </Link>
+        {[
+          { key: "profile", label: "Profile" },
+          { key: "in-progress", label: "In Progress Reviews" },
+          { key: "completed", label: "Completed Reviews" },
+        ].map((tab) => (
+          <Link
+            key={tab.key}
+            to={tab.key}
+            className={`nav-link ${activeTab === tab.key ? "active" : ""
+              }`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </Link>
+        ))}
       </nav>
 
       <div className="reviewer-content">
@@ -56,6 +80,10 @@ function ReviewerDashboard({ onLogout }) {
           context={{
             reviewerInfo,
             handleSave,
+            getInProgressAssignments,
+            getCompletedReviews,
+            respondToAssignment,
+            createReview,
             onLogout,
           }}
         />

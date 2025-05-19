@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useFormik } from "formik";
 import { Link } from "react-router-dom";
 
+const API_BASE_URL = "https://localhost:5000/api";
+
 function Authorization({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -35,17 +38,31 @@ function Authorization({ onLogin }) {
       return errors;
     },
 
-    onSubmit: (values) => {
-      console.log(values);
-      let role;
-      if (values.email.includes("admin")) {
-        role = "admin";
-      } else if (values.email.includes("reviewer")) {
-        role = "reviewer";
-      } else {
-        role = "author";
+    onSubmit: async (values) => {
+      setErrorMessage("");
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(values),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Login failed");
+        }
+
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("authExpires", data.expires);
+
+        onLogin(data.role);
+      } catch (error) {
+        setErrorMessage(error.message);
       }
-      onLogin(role);
     },
   });
 
@@ -56,11 +73,10 @@ function Authorization({ onLogin }) {
         <div>
           <input
             type="email"
-            className={`header__input ${
-              formik.touched.email && formik.errors.email
+            className={`header__input ${formik.touched.email && formik.errors.email
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="E-mail"
             name="email"
             onChange={formik.handleChange}
@@ -74,11 +90,10 @@ function Authorization({ onLogin }) {
         <div className="header__password-wrapper">
           <input
             type={showPassword ? "text" : "password"}
-            className={`header__input ${
-              formik.touched.password && formik.errors.password
+            className={`header__input ${formik.touched.password && formik.errors.password
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="Password"
             name="password"
             onChange={formik.handleChange}
@@ -116,6 +131,7 @@ function Authorization({ onLogin }) {
           ) : null}
         </div>
         <div className="header__footer">
+          {errorMessage && <div className="header__error">{errorMessage}</div>}
           <Link to="/registration" className="header__register-link">
             No account? Registration
           </Link>

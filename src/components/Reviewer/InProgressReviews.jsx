@@ -1,72 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 
 function InProgressReviews() {
-  const { reviewerInfo } = useOutletContext();
+  const {
+    getInProgressAssignments,
+    respondToAssignment,
+  } = useOutletContext();
   const navigate = useNavigate();
 
-  const isAvailableForReviews = reviewerInfo.availableForReviews !== false;
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const initialNewRequests = isAvailableForReviews
-    ? [
-        {
-          id: 1,
-          title: "Advanced Neural Networks in Image Processing",
-          authors: "Mark Williams, Lisa Chen",
-          abstract: "This paper presents novel approaches...",
-          expectedTime: "4-5 hours",
-          pages: 25,
-        },
-      ]
-    : [];
+  useEffect(() => {
+    setLoading(true);
+    getInProgressAssignments()
+      .then(({ data }) => {
+        setAssignments(data);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load assignments.");
+      })
+      .finally(() => setLoading(false));
+  }, [getInProgressAssignments]);
 
-  const [inProgressReviews, setInProgressReviews] = React.useState(
-    JSON.parse(localStorage.getItem("inProgressReviews")) ||
-      [].filter((review) => review.reviewerId === reviewerInfo.id)
-  );
+  const newRequests = assignments.filter((a) => a.isAccepted === null);
+  const inProgress = assignments.filter((a) => a.isAccepted === true);
 
-  const [newReviewRequests, setNewReviewRequests] =
-    useState(initialNewRequests);
-
-  const handleDecline = (requestId) => {
-    setNewReviewRequests(
-      newReviewRequests.filter((request) => request.id !== requestId)
-    );
+  const handleRespond = (assignmentId, accept) => {
+    respondToAssignment(assignmentId, accept)
+      .then(({ data }) => {
+        setAssignments((prev) =>
+          prev.map((a) => (a.id === data.id ? data : a))
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to respond to assignment.");
+      });
   };
 
-  const handleAccept = (request) => {
-    setNewReviewRequests(
-      newReviewRequests.filter((req) => req.id !== request.id)
-    );
-
-    setInProgressReviews([
-      ...inProgressReviews,
-      {
-        id: request.id,
-        title: request.title,
-        authors: request.authors,
-        progress: 0,
-        dueDate: new Date(
-          Date.now() + 14 * 24 * 60 * 60 * 1000
-        ).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
-      },
-    ]);
-  };
-
-  const handleContinueReview = (review) => {
+  const handleContinueReview = (assignment) => {
     navigate("/review-submission", {
       state: {
-        articleData: {
-          title: review.title,
-          authors: review.authors,
-        },
+        articleId: assignment.articleId,
+        articleTitle: assignment.articleTitle,
       },
     });
   };
+
+  if (loading) return <div>Loading assignments…</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="in-progress-reviews">
@@ -74,25 +59,24 @@ function InProgressReviews() {
 
       <section className="new-requests">
         <h3>New Review Requests</h3>
-        {newReviewRequests.length === 0 ? (
+        {newRequests.length === 0 ? (
           <p>No new review requests at this time.</p>
         ) : (
           <div className="requests-list">
-            {newReviewRequests.map((request) => (
-              <div key={request.id} className="request-card">
-                <h4>{request.title}</h4>
-                <p className="authors">Authors: {request.authors}</p>
-                <p className="abstract">{request.abstract}</p>
+            {newRequests.map((r) => (
+              <div key={r.id} className="request-card">
+                <h4>{r.articleTitle}</h4>
+                <p>Assigned: {new Date(r.assignedAt).toLocaleDateString()}</p>
                 <div className="request-actions">
                   <button
                     className="accept-btn"
-                    onClick={() => handleAccept(request)}
+                    onClick={() => handleRespond(r.id, true)}
                   >
                     Accept
                   </button>
                   <button
                     className="decline-btn"
-                    onClick={() => handleDecline(request.id)}
+                    onClick={() => handleRespond(r.id, false)}
                   >
                     Decline
                   </button>
@@ -105,31 +89,19 @@ function InProgressReviews() {
 
       <section className="current-reviews">
         <h3>Current Reviews</h3>
-        {inProgressReviews.length === 0 ? (
+        {inProgress.length === 0 ? (
           <p>No reviews in progress.</p>
         ) : (
           <div className="reviews-list">
-            {inProgressReviews.map((review) => (
-              <div key={review.id} className="review-card">
-                <h4>{review.title}</h4>
-                <p className="authors">Authors: {review.authors}</p>
-
-                <div className="progress-container">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${review.progress}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">{review.progress}%</span>
-                </div>
-
-                <p className="due-date">Due: {review.dueDate}</p>
+            {inProgress.map((r) => (
+              <div key={r.id} className="review-card">
+                <h4>{r.articleTitle}</h4>
+                <p>Assigned: {new Date(r.assignedAt).toLocaleDateString()}</p>
 
                 <div className="review-actions">
                   <button
                     className="continue-btn"
-                    onClick={() => handleContinueReview(review)}
+                    onClick={() => handleContinueReview(r)}
                   >
                     Continue Review
                   </button>

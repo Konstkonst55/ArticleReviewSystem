@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useFormik } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE_URL = "https://localhost:5000/api";
+
 function Registration() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -56,9 +59,38 @@ function Registration() {
 
       return errors;
     },
-    onSubmit: (values) => {
-      console.log(values);
-      navigate("/");
+    onSubmit: async (values) => {
+      setErrorMessage("");
+      try {
+        const { firstName, lastName, email, password, specialisation, location } = values;
+        const fullName = `${firstName} ${lastName}`;
+        const role = "Author";
+
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            Email: email,
+            Password: password,
+            FullName: fullName,
+            Role: role,
+            Specialisation: specialisation,
+            Location: location,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok)
+          throw new Error(data.message || "Registration failed");
+
+        navigate("/");
+      } catch (error) {
+        setErrorMessage(error.message);
+      }
     },
   });
 
@@ -69,11 +101,10 @@ function Registration() {
         <div>
           <input
             type="text"
-            className={`header__input ${
-              formik.touched.firstName && formik.errors.firstName
+            className={`header__input ${formik.touched.firstName && formik.errors.firstName
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="FirstName"
             name="firstName"
             onChange={formik.handleChange}
@@ -88,11 +119,10 @@ function Registration() {
         <div>
           <input
             type="text"
-            className={`header__input ${
-              formik.touched.lastName && formik.errors.lastName
+            className={`header__input ${formik.touched.lastName && formik.errors.lastName
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="LastName"
             name="lastName"
             onChange={formik.handleChange}
@@ -107,11 +137,10 @@ function Registration() {
         <div>
           <input
             type="text"
-            className={`header__input ${
-              formik.touched.specialisation && formik.errors.specialisation
+            className={`header__input ${formik.touched.specialisation && formik.errors.specialisation
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="Specialisation"
             name="specialisation"
             onChange={formik.handleChange}
@@ -126,11 +155,10 @@ function Registration() {
         <div>
           <input
             type="email"
-            className={`header__input ${
-              formik.touched.email && formik.errors.email
+            className={`header__input ${formik.touched.email && formik.errors.email
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="E-mail"
             name="email"
             onChange={formik.handleChange}
@@ -145,11 +173,10 @@ function Registration() {
         <div>
           <input
             type="text"
-            className={`header__input ${
-              formik.touched.location && formik.errors.location
+            className={`header__input ${formik.touched.location && formik.errors.location
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="Location"
             name="location"
             onChange={formik.handleChange}
@@ -164,11 +191,10 @@ function Registration() {
         <div className="header__password-wrapper">
           <input
             type={showPassword ? "text" : "password"}
-            className={`header__input ${
-              formik.touched.password && formik.errors.password
+            className={`header__input ${formik.touched.password && formik.errors.password
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="Password"
             name="password"
             onChange={formik.handleChange}
@@ -209,11 +235,10 @@ function Registration() {
         <div className="header__password-wrapper">
           <input
             type={showConfirmPassword ? "text" : "password"}
-            className={`header__input ${
-              formik.touched.confirmPassword && formik.errors.confirmPassword
+            className={`header__input ${formik.touched.confirmPassword && formik.errors.confirmPassword
                 ? "header__input--error"
                 : ""
-            }`}
+              }`}
             placeholder="ConfirmPassword"
             name="confirmPassword"
             onChange={formik.handleChange}

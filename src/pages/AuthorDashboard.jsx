@@ -1,73 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { fetchProfile, fetchArticles, updateProfile } from '../api';
 
 function AuthorDashboard({ onLogout }) {
-  const [articles, setArticles] = useState([
-    {
-      id: 1,
-      title: "Machine Learning Advances in 2025",
-      author: "Sarah Johnson",
-      date: "May 4, 2025",
-      category: "Technology",
-      status: "Under Review",
-    },
-    {
-      id: 2,
-      title: "Blockchain in Healthcare",
-      author: "Michael Chen",
-      date: "May 3, 2025",
-      category: "Healthcare",
-      status: "Under Review",
-    },
-    {
-      id: 3,
-      title: "Sustainable Energy Solutions",
-      author: "Emma Watson",
-      date: "May 2, 2025",
-      category: "Environment",
-      status: "Published",
-    },
-  ]);
-
+  const [authorInfo, setAuthorInfo] = useState(null);
+  const [articles, setArticles] = useState([]);
+  const [bio, setBio] = useState("");
+  const [telegramHandle, setTelegramHandle] = useState("");
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(
-    location.pathname.split("/").pop() || "profile"
+    location.pathname.split('/').pop() || 'profile'
   );
-  const [bio, setBio] = useState(
-    "Technology writer with 5+ years of experience in software development and AI."
-  );
-  const [telegramHandle, setTelegramHandle] = useState("@johndoe");
 
-  const [authorInfo, setAuthorInfo] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    specialization: "Technology",
-    location: "New York, USA",
-    phone: "",
-  });
+  useEffect(() => {
+    fetchProfile()
+      .then(res => {
+        const data = res.data;
+        setAuthorInfo({
+          firstName: data.fullName.split(' ')[0],
+          lastName: data.fullName.split(' ')[1] || '',
+          email: data.email,
+          specialization: data.specialisation,
+          location: data.location,
+          bio: data.bio,
+          telegramHandle: data.telegramHandle,
+          phone: data.phone,
+        });
+        setBio(data.bio);
+        setTelegramHandle(data.telegramHandle);
+      })
+      .catch(err => console.error(err));
 
-  const handleSave = (updatedData) => {
-    setAuthorInfo(updatedData);
-  };
+    fetchArticles()
+      .then(res => setArticles(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
-  const handleArticleSubmit = (updatedArticles) => {
-    if (Array.isArray(updatedArticles)) {
-      setArticles(updatedArticles);
-    } else {
-      setArticles((prevArticles) => {
-        const existingIndex = prevArticles.findIndex(
-          (a) => a.id === updatedArticles.id
-        );
-        if (existingIndex >= 0) {
-          const updated = [...prevArticles];
-          updated[existingIndex] = updatedArticles;
-          return updated;
-        }
-        return [...prevArticles, updatedArticles];
-      });
+  if (!authorInfo) return <p>Loading profile...</p>;
+
+  const handleSave = async (updatedInfo) => {
+    try {
+      const payload = {
+        fullName: `${updatedInfo.firstName} ${updatedInfo.lastName}`.trim(),
+        specialisation: updatedInfo.specialization,
+        location: updatedInfo.location,
+        phone: updatedInfo.phone,
+        bio,
+        telegramHandle
+      };
+      await updateProfile(payload);
+      setAuthorInfo(updatedInfo);
+      alert("Profile updated!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save profile");
     }
   };
+
   return (
     <div className="author-dashboard">
       <div className="author-header">
@@ -87,18 +76,16 @@ function AuthorDashboard({ onLogout }) {
         </Link>
         <Link
           to="submit-article"
-          className={`nav-link ${
-            activeTab === "submit-article" ? "active" : ""
-          }`}
+          className={`nav-link ${activeTab === "submit-article" ? "active" : ""
+            }`}
           onClick={() => setActiveTab("submit-article")}
         >
           Submit Article
         </Link>
         <Link
           to="review-articles"
-          className={`nav-link ${
-            activeTab === "review-articles" ? "active" : ""
-          }`}
+          className={`nav-link ${activeTab === "review-articles" ? "active" : ""
+            }`}
           onClick={() => setActiveTab("review-articles")}
         >
           Review Articles
@@ -106,19 +93,7 @@ function AuthorDashboard({ onLogout }) {
       </nav>
 
       <div className="author-content">
-        <Outlet
-          context={{
-            authorInfo,
-            bio,
-            setBio,
-            telegramHandle,
-            setTelegramHandle,
-            handleSave,
-            onLogout,
-            articles,
-            onSubmitReview: handleArticleSubmit,
-          }}
-        />
+        <Outlet context={{ authorInfo, bio, setBio, telegramHandle, setTelegramHandle, handleSave, onLogout, articles, setArticles }} />
       </div>
     </div>
   );

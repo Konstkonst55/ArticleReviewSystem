@@ -7,6 +7,23 @@ function AuthorReviewArticles() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "UnderReview":
+        return "Under Review";
+      case "Published":
+        return "Published";
+      case "Rejected":
+        return "Rejected";
+      case "Draft":
+        return "Draft";
+      case "all":
+        return "All";
+      default:
+        return status;
+    }
+  };
+
   const filteredArticles = articles.filter((article) => {
     const matchesStatus =
       statusFilter === "all" || article.status === statusFilter;
@@ -14,8 +31,9 @@ function AuthorReviewArticles() {
       article.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       article.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       article.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.status?.toLowerCase().includes(searchTerm.toLowerCase());
-
+      article.status
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -27,7 +45,9 @@ function AuthorReviewArticles() {
 
   const handleDeleteArticle = (id) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
-      const updatedArticles = articles.filter((article) => article.id !== id);
+      const updatedArticles = articles.filter(
+        (article) => article.id !== id
+      );
       onSubmitReview(updatedArticles);
     }
   };
@@ -42,30 +62,15 @@ function AuthorReviewArticles() {
 
       <div className="filters-container">
         <div className="status-filters">
-          <button
-            className={statusFilter === "all" ? "active" : ""}
-            onClick={() => setStatusFilter("all")}
-          >
-            All Articles
-          </button>
-          <button
-            className={statusFilter === "Under Review" ? "active" : ""}
-            onClick={() => setStatusFilter("Under Review")}
-          >
-            Under Review
-          </button>
-          <button
-            className={statusFilter === "Published" ? "active" : ""}
-            onClick={() => setStatusFilter("Published")}
-          >
-            Published
-          </button>
-          <button
-            className={statusFilter === "Draft" ? "active" : ""}
-            onClick={() => setStatusFilter("Draft")}
-          >
-            Drafts
-          </button>
+          {["all", "UnderReview", "Published", "Draft"].map((key) => (
+            <button
+              key={key}
+              className={statusFilter === key ? "active" : ""}
+              onClick={() => setStatusFilter(key)}
+            >
+              {formatStatus(key)} Articles
+            </button>
+          ))}
         </div>
 
         <div className="search-bar">
@@ -80,9 +85,11 @@ function AuthorReviewArticles() {
 
       <div className="articles-list">
         <h3>
-          {statusFilter === "all" ? "All Articles" : `${statusFilter} Articles`}
+          {formatStatus(statusFilter)} Articles
           {filteredArticles.length > 0 && (
-            <span className="count-badge">{filteredArticles.length}</span>
+            <span className="count-badge">
+              {filteredArticles.length}
+            </span>
           )}
         </h3>
 
@@ -105,11 +112,13 @@ function AuthorReviewArticles() {
                 <div className="article-header">
                   <h4>{article.title}</h4>
                   <span
-                    className={`status-badge ${article.status
-                      .toLowerCase()
-                      .replace(" ", "-")}`}
+                    className={`status-badge ${
+                      article.status
+                        .toLowerCase()
+                        .replace(" ", "-")
+                    }`}
                   >
-                    {article.status}
+                    {formatStatus(article.status)}
                   </span>
                 </div>
                 <div className="article-meta">
@@ -129,7 +138,9 @@ function AuthorReviewArticles() {
                       </button>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDeleteArticle(article.id)}
+                        onClick={() =>
+                          handleDeleteArticle(article.id)
+                        }
                       >
                         Delete
                       </button>
