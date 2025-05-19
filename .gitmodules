@@ -1,0 +1,3 @@
+[submodule "ArticleReviewSystemAPI"]
+	path = ArticleReviewSystemAPI
+	url = https://github.com/NuIIX/ArticleReviewSystemAPI.git
